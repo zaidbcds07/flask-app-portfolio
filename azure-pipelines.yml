@@ -1,39 +1,60 @@
-# Docker
-# Build and push an image to Azure Container Registry
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
 trigger:
-- main
-
-resources:
-- repo: self
+  branches:
+    include:
+      - main
 
 variables:
-  # Container registry service connection established during pipeline creation
-  dockerRegistryServiceConnection: '98a41d2b-7123-4582-b375-21f2e7434fca'
-  imageRepository: 'flaskappportfolio'
-  containerRegistry: 'zenecommerceacr123.azurecr.io'
-  dockerfilePath: '$(Build.SourcesDirectory)/dockerfile'
-  tag: '$(Build.BuildId)'
+  azureSubscription: 'sc-azure-flask'
+  resourceGroup: 'rg-flask-portfolio'
+  acrName: 'zenecommerceacr123'
+  acrLoginServer: 'zenecommerceacr123.azurecr.io'
+  imageName: 'flask-app-portfolio'
+  containerAppName: 'flask-app-portfolio'
 
-  # Agent VM image name
-  vmImageName: 'ubuntu-latest'
+pool:
+  vmImage: 'Default'
 
-stages:
-- stage: Build
-  displayName: Build and push stage
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      vmImage: $(vmImageName)
-    steps:
-    - task: Docker@2
-      displayName: Build and push an image to container registry
-      inputs:
-        command: buildAndPush
-        repository: $(imageRepository)
-        dockerfile: $(dockerfilePath)
-        containerRegistry: $(dockerRegistryServiceConnection)
-        tags: |
-          $(tag)
+steps:
+- checkout: self
+
+- task: AzureCLI@2
+  displayName: 'Build and push Docker image to Azure Container Registry'
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptType: ps
+    scriptLocation: inlineScript
+    inlineScript: |
+      echo "Logging in to ACR..."
+      az acr login --name $(acrName)
+
+      echo "Building Docker image..."
+      docker build \
+        -t $(acrLoginServer)/$(imageName):$(Build.BuildId) \
+        -t $(acrLoginServer)/$(imageName):latest \
+        .
+
+      echo "Pushing Docker image..."
+      docker push $(acrLoginServer)/$(imageName):$(Build.BuildId)
+      docker push $(acrLoginServer)/$(imageName):latest
+
+- task: AzureCLI@2
+  displayName: 'Deploy image to Azure Container Apps'
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptType: ps
+    scriptLocation: inlineScript
+    inlineScript: |
+      echo "Deploying to Azure Container Apps..."
+
+      az containerapp update \
+        --name $(containerAppName) \
+        --resource-group $(resourceGroup) \
+        --image $(acrLoginServer)/$(imageName):$(Build.BuildId)
+
+      echo "Deployment completed."
+
+      az containerapp show \
+        --name $(containerAppName) \
+        --resource-group $(resourceGroup) \
+        --query properties.configuration.ingress.fqdn \
+        -o tsv
