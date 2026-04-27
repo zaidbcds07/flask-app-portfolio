@@ -21,7 +21,7 @@ steps:
   displayName: 'Build and push Docker image to Azure Container Registry'
   inputs:
     azureSubscription: $(azureSubscription)
-    scriptType: bash
+    scriptType: ps
     scriptLocation: inlineScript
     inlineScript: |
       echo "Logging in to ACR..."
@@ -41,7 +41,7 @@ steps:
   displayName: 'Deploy image to Azure Container Apps'
   inputs:
     azureSubscription: $(azureSubscription)
-    scriptType: bash
+    scriptType: ps
     scriptLocation: inlineScript
     inlineScript: |
       echo "Deploying to Azure Container Apps..."
