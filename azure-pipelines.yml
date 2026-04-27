@@ -4,7 +4,7 @@ trigger:
       - main
 
 variables:
-  azureSubscription: 'sc-azure-flask''
+  azureSubscription: 'sc-azure-flask'
   resourceGroup: 'rg-flask-portfolio'
   acrName: 'zenecommerceacr123'
   acrLoginServer: 'zenecommerceacr123.azurecr.io'
