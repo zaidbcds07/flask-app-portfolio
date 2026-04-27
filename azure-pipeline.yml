@@ -6,8 +6,8 @@ trigger:
 variables:
   azureSubscription: 'sc-azure-flask'
   resourceGroup: 'rg-flask-portfolio'
-  acrName: 'flaskportfolioacr'
-  acrLoginServer: 'flaskportfolioacr.azurecr.io'
+  acrName: 'zenecommerceacr123'
+  acrLoginServer: 'zenecommerceacr123.azurecr.io'
   imageName: 'flask-app-portfolio'
   containerAppName: 'flask-app-portfolio'
 
