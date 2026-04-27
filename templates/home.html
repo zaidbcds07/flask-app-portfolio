@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="card hero-card">
+    <div class="hero-layout">
+
+        <!-- LEFT SIDE (TEXT) -->
+        <div class="hero-text">
+            <h2>Welcome</h2>
+            <p>{{ profile.summary }}</p>
+
+            <div class="button-row">
+                <a class="btn btn-primary" href="{{ profile.linkedin }}" target="_blank">View LinkedIn</a>
+                <a class="btn btn-secondary" href="{{ url_for('projects') }}">See Projects</a>
+                <a class="btn btn-secondary" href="{{ url_for('guestbook') }}">Open Guestbook</a>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE (PHOTO) -->
+        <div class="hero-photo">
+            <img 
+                src="{{ url_for('static', filename='profile3.jpg') }}" 
+                alt="Zaid Lazim"
+                class="profile-photo"
+            >
+        </div>
+
+    </div>
+</section>
+
+<section class="card">
+    <h2>Core Skills</h2>
+    <div class="skills-grid">
+        {% for skill in profile.skills %}
+            <div class="skill-box">{{ skill }}</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

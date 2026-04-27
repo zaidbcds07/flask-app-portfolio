@@ -1,0 +1,11 @@
+services:
+  flask-portfolio:
+    build: .
+    container_name: flask-portfolio
+    ports:
+      - "127.0.0.1:5004:5004"
+    volumes:
+      - ./instance:/app/instance
+    environment:
+      SECRET_KEY: "change-this-to-a-long-random-secret-key"
+    restart: unless-stopped

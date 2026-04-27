@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="card">
+    <h2>About Me</h2>
+    <p>{{ profile.about }}</p>
+</section>
+
+<section class="card">
+    <h2>Technical Background</h2>
+    <p>
+        I focus on practical technical work that combines scripting, system operations,
+        automation, and lightweight web development. I enjoy learning by building real
+        projects that solve day-to-day infrastructure and administration problems.
+    </p>
+</section>
+
+<section class="card">
+    <h2>Professional Links</h2>
+    <p><strong>LinkedIn:</strong> <a href="{{ profile.linkedin }}" target="_blank">{{ profile.linkedin }}</a></p>
+    <p><strong>Email:</strong> <a href="mailto:{{ profile.email }}">{{ profile.email }}</a></p>
+    <p><strong>Github:</strong> <a href="{{ profile.github }}" target="_blank">{{ profile.github }}</a></p>
+</section>
+{% endblock %}

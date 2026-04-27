@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="card">
+    <h2>Guestbook</h2>
+
+    {% if current_user.is_authenticated %}
+        <p>Logged in as <strong>{{ current_user.username }}</strong></p>
+
+        <form method="POST" action="{{ url_for('guestbook') }}">
+            <label for="contents">Leave a comment</label>
+            <textarea
+                id="contents"
+                name="contents"
+                rows="5"
+                placeholder="Write your comment here..."
+                required
+            ></textarea>
+            <button class="btn btn-primary" type="submit">Post Comment</button>
+        </form>
+    {% else %}
+        <p>You must <a href="{{ url_for('login') }}">log in</a> to post a comment.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <h2>Recent Comments</h2>
+
+    {% if comments %}
+        {% for comment in comments %}
+            <div class="comment-box">
+                <p>{{ comment.content }}</p>
+                <p class="meta">
+                    By <strong>{{ comment.author.username }}</strong>
+                    on {{ comment.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                </p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No comments yet.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <p class="meta">Page generated at: {{ timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+</section>
+{% endblock %}

@@ -1,0 +1,10 @@
+[2026-04-14 09:43:25 +0800] [9099] [INFO] Starting gunicorn 25.3.0
+[2026-04-14 09:43:25 +0800] [9099] [INFO] Listening at: http://127.0.0.1:5000 (9099)
+[2026-04-14 09:43:25 +0800] [9099] [INFO] Using worker: sync
+[2026-04-14 09:43:25 +0800] [9106] [INFO] Booting worker with pid: 9106
+[2026-04-14 09:43:25 +0800] [9107] [INFO] Booting worker with pid: 9107
+[2026-04-14 09:43:25 +0800] [9099] [INFO] Control socket listening at /run/user/1000/gunicorn.ctl
+[2026-04-14 09:43:58 +0800] [9099] [INFO] Handling signal: term
+[2026-04-14 09:43:58 +0800] [9107] [INFO] Worker exiting (pid: 9107)
+[2026-04-14 09:43:58 +0800] [9106] [INFO] Worker exiting (pid: 9106)
+[2026-04-14 09:43:58 +0800] [9099] [INFO] Shutting down: Master

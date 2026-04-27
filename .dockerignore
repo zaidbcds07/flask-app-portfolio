@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sh
+.git/
+.gitignore
+logs/
+gunicorn.pid
+instance/comments.db
