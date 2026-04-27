@@ -1,60 +1,9 @@
 trigger:
-  branches:
-    include:
-      - main
-
-variables:
-  azureSubscription: 'sc-azure-flask'
-  resourceGroup: 'rg-flask-portfolio'
-  acrName: 'zenecommerceacr123'
-  acrLoginServer: 'zenecommerceacr123.azurecr.io'
-  imageName: 'flask-app-portfolio'
-  containerAppName: 'flask-app-portfolio'
+- main
 
 pool:
-  vmImage: 'Default'
+  name: Default
 
 steps:
-- checkout: self
-
-- task: AzureCLI@2
-  displayName: 'Build and push Docker image to Azure Container Registry'
-  inputs:
-    azureSubscription: $(azureSubscription)
-    scriptType: ps
-    scriptLocation: inlineScript
-    inlineScript: |
-      echo "Logging in to ACR..."
-      az acr login --name $(acrName)
-
-      echo "Building Docker image..."
-      docker build \
-        -t $(acrLoginServer)/$(imageName):$(Build.BuildId) \
-        -t $(acrLoginServer)/$(imageName):latest \
-        .
-
-      echo "Pushing Docker image..."
-      docker push $(acrLoginServer)/$(imageName):$(Build.BuildId)
-      docker push $(acrLoginServer)/$(imageName):latest
-
-- task: AzureCLI@2
-  displayName: 'Deploy image to Azure Container Apps'
-  inputs:
-    azureSubscription: $(azureSubscription)
-    scriptType: ps
-    scriptLocation: inlineScript
-    inlineScript: |
-      echo "Deploying to Azure Container Apps..."
-
-      az containerapp update \
-        --name $(containerAppName) \
-        --resource-group $(resourceGroup) \
-        --image $(acrLoginServer)/$(imageName):$(Build.BuildId)
-
-      echo "Deployment completed."
-
-      az containerapp show \
-        --name $(containerAppName) \
-        --resource-group $(resourceGroup) \
-        --query properties.configuration.ingress.fqdn \
-        -o tsv
+- script: echo Hello from self-hosted agent
+  displayName: 'Test self-hosted agent'
