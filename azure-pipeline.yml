@@ -12,7 +12,7 @@ variables:
   containerAppName: 'flask-app-portfolio'
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'Default'
 
 steps:
 - checkout: self
