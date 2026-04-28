@@ -58,10 +58,11 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-secret-key"
 **Recommendation:** Add validation rules for username (min 3 chars, alphanumeric) and password (min 8 chars, complexity requirements).
 
 ### DEP-001: Container App Not Verified
-**Status:** ⚠️ Open  
-**Priority:** High  
-**Description:** Need to verify if Container App `flask-app-portfolio` exists in `rg-zen-ecommerce` resource group.  
-**Action Required:** Run `az containerapp list --resource-group rg-zen-ecommerce` to verify.
+**Status:** ✅ Fixed  
+**Date:** 2026-04-28  
+**Description:** Container App `flask-app-portfolio` did not exist in `rg-zen-ecommerce` resource group, causing deployment failures.  
+**Solution:** Created the Container App using Azure CLI with the existing `zen-ecommerce-env` environment.  
+**URL:** https://flask-app-portfolio.bravehill-d5a050aa.southeastasia.azurecontainerapps.io/
 
 ---
 
