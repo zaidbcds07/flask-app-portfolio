@@ -28,6 +28,13 @@ This document tracks known issues, bugs, improvements, and tasks related to the 
 **Solution:** Added `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` environment variable.  
 **File:** `.github/workflows/deploy.yml`
 
+### CI-003: Replace Deprecated azure/docker-login Action
+**Status:** ✅ Fixed  
+**Date:** 2026-04-28  
+**Description:** The `azure/docker-login@v1` action is deprecated and generates warnings.  
+**Solution:** Replaced with official `docker/login-action@v3` and updated parameter from `login-server` to `registry`.  
+**File:** `.github/workflows/deploy.yml`
+
 ---
 
 ## High Priority
@@ -124,6 +131,7 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-secret-key"
 | SETUP-004 | Retrieved ACR credentials | 2026-04-28 |
 | CI-001 | Fixed resource group in GitHub Actions workflow | 2026-04-28 |
 | CI-002 | Fixed Node.js deprecation warnings | 2026-04-28 |
+| CI-003 | Replaced deprecated azure/docker-login with docker/login-action@v3 | 2026-04-28 |
 | DEP-002 | Built and pushed Docker image to ACR | 2026-04-28 |
 
 ---
@@ -184,4 +192,5 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-secret-key"
 
 ## Last Updated
 **Date:** 2026-04-28  
-**Updated By:** GitHub Copilot
+**Updated By:** GitHub Copilot  
+**Changes:** Added CI-003 - Replaced deprecated azure/docker-login action
