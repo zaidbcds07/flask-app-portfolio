@@ -8,11 +8,12 @@ on:
 
 env:
   AZURE_SUBSCRIPTION: 'sc-azure-flask'
-  RESOURCE_GROUP: 'rg-flask-portfolio'
+  RESOURCE_GROUP: 'rg-zen-ecommerce'
   ACR_NAME: 'zenecommerceacr123'
   ACR_LOGIN_SERVER: 'zenecommerceacr123.azurecr.io'
   IMAGE_NAME: 'flask-app-portfolio'
   CONTAINER_APP_NAME: 'flask-app-portfolio'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-and-deploy:
