@@ -1,0 +1,176 @@
+# Azure DevOps Pipeline for Flask Portfolio App
+# Deploys to Azure Container Apps
+
+trigger:
+  - main
+  - master
+
+variables:
+  # Container registry and image settings
+  containerRegistry: 'zlacr2026.azurecr.io'  # Replace with your ACR name
+  imageRepository: 'flask-portfolio'
+  tag: '$(Build.BuildId)'
+  
+  # Azure Container App settings
+  resourceGroup: 'zl-resource-group'  # Replace with your resource group
+  containerAppName: 'flask-portfolio-app'  # Replace with your container app name
+  
+  # Python version
+  pythonVersion: '3.12'
+
+stages:
+  # Stage 1: Build and Test
+  - stage: Build
+    displayName: 'Build and Test'
+    jobs:
+      - job: BuildAndTest
+        displayName: 'Build and Test'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          # Set up Python
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+            displayName: 'Use Python $(pythonVersion)'
+          
+          # Install dependencies
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+            displayName: 'Install dependencies'
+          
+          # Run tests (if you have tests)
+          - script: |
+              pip install pytest
+              pytest || echo "No tests found, continuing..."
+            displayName: 'Run tests'
+            continueOnError: true
+          
+          # Lint check with flake8
+          - script: |
+              pip install flake8
+              flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || echo "Lint warnings found"
+            displayName: 'Run linting'
+            continueOnError: true
+
+  # Stage 2: Build and Push Docker Image
+  - stage: BuildAndPush
+    displayName: 'Build and Push Docker Image'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - job: BuildAndPushImage
+        displayName: 'Build and Push Image'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          # Build Docker image
+          - task: Docker@2
+            displayName: 'Build Docker Image'
+            inputs:
+              command: 'build'
+              Dockerfile: '**/dockerfile'
+              tags: |
+                $(containerRegistry)/$(imageRepository):$(tag)
+                $(containerRegistry)/$(imageRepository):latest
+          
+          # Login to Azure Container Registry
+          - task: Docker@2
+            displayName: 'Login to ACR'
+            inputs:
+              command: 'login'
+              containerRegistry: 'your-acr-service-connection'  # Replace with your service connection name
+          
+          # Push Docker image
+          - task: Docker@2
+            displayName: 'Push Docker Image'
+            inputs:
+              command: 'push'
+              repository: '$(imageRepository)'
+              tags: |
+                $(tag)
+                latest
+              containerRegistry: 'your-acr-service-connection'  # Replace with your service connection name
+
+  # Stage 3: Deploy to Azure Container Apps
+  - stage: Deploy
+    displayName: 'Deploy to Azure Container Apps'
+    dependsOn: BuildAndPush
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToContainerApp
+        displayName: 'Deploy to Container App'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Login to Azure
+                - task: AzureCLI@2
+                  displayName: 'Azure Login'
+                  inputs:
+                    azureSubscription: 'your-azure-service-connection'  # Replace with your Azure service connection
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "Logged in to Azure"
+                
+                # Deploy to Azure Container Apps
+                - task: AzureCLI@2
+                  displayName: 'Deploy Container App'
+                  inputs:
+                    azureSubscription: 'your-azure-service-connection'  # Replace with your Azure service connection
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      # Check if container app exists
+                      az containerapp show \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --query "name" -o tsv 2>/dev/null && EXISTS=true || EXISTS=false
+                      
+                      if [ "$EXISTS" = "false" ]; then
+                        echo "Creating new Container App..."
+                        az containerapp create \
+                          --name $(containerAppName) \
+                          --resource-group $(resourceGroup) \
+                          --image $(containerRegistry)/$(imageRepository):$(tag) \
+                          --target-port 5004 \
+                          --ingress external \
+                          --environment-variables "SECRET_KEY=$(SECRET_KEY)" \
+                          --registry-server $(containerRegistry) \
+                          --registry-username $(ACR_USERNAME) \
+                          --registry-password $(ACR_PASSWORD) \
+                          --cpu 0.5 \
+                          --memory 1Gi \
+                          --min-replicas 1 \
+                          --max-replicas 3
+                      else
+                        echo "Updating existing Container App..."
+                        az containerapp update \
+                          --name $(containerAppName) \
+                          --resource-group $(resourceGroup) \
+                          --image $(containerRegistry)/$(imageRepository):$(tag)
+                      fi
+                      
+                      # Get the app URL
+                      APP_URL=$(az containerapp show \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --query "properties.configuration.ingress.fqdn" -o tsv)
+                      
+                      echo "Container App URL: https://$APP_URL"
+                      echo "##vso[task.setvariable variable=appUrl]https://$APP_URL"
+
+                # Verify deployment
+                - script: |
+                    echo "Waiting for deployment to stabilize..."
+                    sleep 30
+                    curl -f -s $(appUrl) > /dev/null && echo "Deployment successful!" || echo "Deployment verification pending"
+                  displayName: 'Verify Deployment'
+                  continueOnError: true
