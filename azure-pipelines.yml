@@ -1,5 +1,11 @@
 # Azure DevOps Pipeline for Flask Portfolio App
 # Deploys to Azure Container Apps
+#
+# IMPORTANT: Before running this pipeline, create these service connections in Azure DevOps:
+# 1. Docker Registry service connection named 'zlacr2026-connection' for ACR
+# 2. Azure Resource Manager service connection named 'zl-azure-connection'
+#
+# See AZURE_DEVOPS_SETUP.md for detailed instructions.
 
 trigger:
   - main
@@ -82,7 +88,7 @@ stages:
             displayName: 'Login to ACR'
             inputs:
               command: 'login'
-              containerRegistry: 'your-acr-service-connection'  # Replace with your service connection name
+              containerRegistry: 'zlacr2026'
           
           # Push Docker image
           - task: Docker@2
@@ -93,7 +99,7 @@ stages:
               tags: |
                 $(tag)
                 latest
-              containerRegistry: 'your-acr-service-connection'  # Replace with your service connection name
+              containerRegistry: 'zlacr2026-connection'
 
   # Stage 3: Deploy to Azure Container Apps
   - stage: Deploy
@@ -114,7 +120,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: 'Azure Login'
                   inputs:
-                    azureSubscription: 'your-azure-service-connection'  # Replace with your Azure service connection
+                    azureSubscription: 'zlacr2026-connection'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
@@ -124,7 +130,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: 'Deploy Container App'
                   inputs:
-                    azureSubscription: 'your-azure-service-connection'  # Replace with your Azure service connection
+                    azureSubscription: 'zlacr2026-connection'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
