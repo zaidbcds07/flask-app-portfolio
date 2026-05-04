@@ -12,7 +12,7 @@ variables:
   tag: '$(Build.BuildId)'
   
   # Azure Container App settings
-  resourceGroup: 'zl-resource-group'  # Replace with your resource group
+  resourceGroup: 'flask-portfolio-rg'  # Replace with your resource group
   containerAppName: 'flask-portfolio-app'  # Replace with your container app name
   
   # Python version
