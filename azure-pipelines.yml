@@ -13,13 +13,17 @@ trigger:
 
 variables:
   # Container registry and image settings
-  containerRegistry: 'zlacr2026.azurecr.io'  # Replace with your ACR name
+  containerRegistry: 'zlacr2026.azurecr.io'
   imageRepository: 'flask-portfolio'
   tag: '$(Build.BuildId)'
   
   # Azure Container App settings
-  resourceGroup: 'flask-portfolio-rg'  # Replace with your resource group
-  containerAppName: 'flask-portfolio-app'  # Replace with your container app name
+  resourceGroup: 'flask-portfolio-rg'
+  containerAppName: 'flask-portfolio-app'
+  
+  # Service connection names - UPDATE THESE to match your Azure DevOps service connections
+  acrServiceConnection: 'zlacr2026-connection'
+  azureServiceConnection: 'zl-azure-connection'
   
   # Python version
   pythonVersion: '3.12'
@@ -88,7 +92,7 @@ stages:
             displayName: 'Login to ACR'
             inputs:
               command: 'login'
-              containerRegistry: 'zlacr2026-connection'
+              containerRegistry: $(acrServiceConnection)
           
           # Push Docker image
           - task: Docker@2
@@ -99,7 +103,7 @@ stages:
               tags: |
                 $(tag)
                 latest
-              containerRegistry: 'zlacr2026-connection'
+              containerRegistry: $(acrServiceConnection)
 
   # Stage 3: Deploy to Azure Container Apps
   - stage: Deploy
@@ -120,7 +124,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: 'Azure Login'
                   inputs:
-                    azureSubscription: 'zl-azure-connection'
+                    azureSubscription: $(azureServiceConnection)
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
@@ -130,7 +134,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: 'Deploy Container App'
                   inputs:
-                    azureSubscription: 'zl-azure-connection'
+                    azureSubscription: $(azureServiceConnection)
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
