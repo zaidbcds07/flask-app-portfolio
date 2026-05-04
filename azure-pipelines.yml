@@ -77,34 +77,28 @@ stages:
           vmImage: 'ubuntu-latest'
         
         steps:
-          # Build Docker image
-          - task: Docker@2
+          # Build Docker image with full tag
+          - script: |
+              docker build -t $(containerRegistry)/$(imageRepository):$(tag) \
+                         -t $(containerRegistry)/$(imageRepository):latest \
+                         -f dockerfile .
             displayName: 'Build Docker Image'
-            inputs:
-              command: 'build'
-              Dockerfile: '**/dockerfile'
-              repository: '$(containerRegistry)/$(imageRepository)'
-              tags: |
-                $(tag)
-                latest
           
-          # Login to Azure Container Registry
-          - task: Docker@2
+          # Login to ACR using Azure CLI
+          - task: AzureCLI@2
             displayName: 'Login to ACR'
             inputs:
-              command: 'login'
-              containerRegistry: $(acrServiceConnection)
+              azureSubscription: $(azureServiceConnection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az acr login --name zlacr2026
           
           # Push Docker image
-          - task: Docker@2
+          - script: |
+              docker push $(containerRegistry)/$(imageRepository):$(tag)
+              docker push $(containerRegistry)/$(imageRepository):latest
             displayName: 'Push Docker Image'
-            inputs:
-              command: 'push'
-              repository: '$(imageRepository)'
-              tags: |
-                $(tag)
-                latest
-              containerRegistry: $(acrServiceConnection)
 
   # Stage 3: Deploy to Azure Container Apps
   - stage: Deploy
