@@ -26,6 +26,11 @@ variables:
   acrServiceConnection: 'zlacr2026-connection'
   azureServiceConnection: 'zl-azure-connection'
   
+  # REQUIRED: Add these variables in Azure DevOps Pipeline settings (as secrets)
+  # SECRET_KEY: 'your-secret-key-here'  # Flask secret key - mark as secret
+  # ACR_USERNAME: 'your-acr-username'    # ACR admin username - mark as secret  
+  # ACR_PASSWORD: 'your-acr-password'    # ACR admin password - mark as secret
+  
   # Python version
   pythonVersion: '3.12'
 
@@ -137,6 +142,19 @@ stages:
                       set -e
                       echo "Checking if Container App exists..."
                       
+                      # Check if required variables are set
+                      if [ -z "$(SECRET_KEY)" ]; then
+                        echo "ERROR: SECRET_KEY variable is not set!"
+                        echo "Please add SECRET_KEY to your pipeline variables."
+                        exit 1
+                      fi
+                      
+                      if [ -z "$(ACR_USERNAME)" ] || [ -z "$(ACR_PASSWORD)" ]; then
+                        echo "ERROR: ACR_USERNAME or ACR_PASSWORD variable is not set!"
+                        echo "Please add ACR_USERNAME and ACR_PASSWORD to your pipeline variables."
+                        exit 1
+                      fi
+                      
                       # Check if container app exists
                       if az containerapp show --name $(containerAppName) --resource-group $(resourceGroup) --query "name" -o tsv 2>/dev/null; then
                         echo "Container App exists. Updating..."
@@ -158,8 +176,8 @@ stages:
                           --ingress external \
                           --environment-variables "SECRET_KEY=$(SECRET_KEY)" \
                           --registry-server $(containerRegistry) \
-                          --registry-username $(ACR_USERNAME) \
-                          --registry-password $(ACR_PASSWORD) \
+                          --registry-username "$(ACR_USERNAME)" \
+                          --registry-password "$(ACR_PASSWORD)" \
                           --cpu 0.5 \
                           --memory 1Gi \
                           --min-replicas 1 \
