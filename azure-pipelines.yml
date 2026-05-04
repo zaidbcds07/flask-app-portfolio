@@ -20,6 +20,7 @@ variables:
   # Azure Container App settings
   resourceGroup: 'flask-portfolio-rg'
   containerAppName: 'flask-portfolio-app'
+  containerAppEnvironment: 'flask-portfolio-env'
   
   # Service connection names - UPDATE THESE to match your Azure DevOps service connections
   acrServiceConnection: 'zlacr2026-connection'
@@ -144,6 +145,7 @@ stages:
                         az containerapp create \
                           --name $(containerAppName) \
                           --resource-group $(resourceGroup) \
+                          --environment $(containerAppEnvironment) \
                           --image $(containerRegistry)/$(imageRepository):$(tag) \
                           --target-port 5004 \
                           --ingress external \
