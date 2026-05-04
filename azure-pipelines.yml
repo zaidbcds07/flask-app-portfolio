@@ -134,14 +134,21 @@ stages:
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
-                      # Check if container app exists
-                      az containerapp show \
-                        --name $(containerAppName) \
-                        --resource-group $(resourceGroup) \
-                        --query "name" -o tsv 2>/dev/null && EXISTS=true || EXISTS=false
+                      set -e
+                      echo "Checking if Container App exists..."
                       
-                      if [ "$EXISTS" = "false" ]; then
-                        echo "Creating new Container App..."
+                      # Check if container app exists
+                      if az containerapp show --name $(containerAppName) --resource-group $(resourceGroup) --query "name" -o tsv 2>/dev/null; then
+                        echo "Container App exists. Updating..."
+                        az containerapp update \
+                          --name $(containerAppName) \
+                          --resource-group $(resourceGroup) \
+                          --image $(containerRegistry)/$(imageRepository):$(tag)
+                      else
+                        echo "Container App does not exist. Creating new one..."
+                        echo "Environment: $(containerAppEnvironment)"
+                        echo "Image: $(containerRegistry)/$(imageRepository):$(tag)"
+                        
                         az containerapp create \
                           --name $(containerAppName) \
                           --resource-group $(resourceGroup) \
@@ -157,15 +164,9 @@ stages:
                           --memory 1Gi \
                           --min-replicas 1 \
                           --max-replicas 3
-                      else
-                        echo "Updating existing Container App..."
-                        az containerapp update \
-                          --name $(containerAppName) \
-                          --resource-group $(resourceGroup) \
-                          --image $(containerRegistry)/$(imageRepository):$(tag)
                       fi
                       
-                      # Get the app URL
+                      echo "Getting Container App URL..."
                       APP_URL=$(az containerapp show \
                         --name $(containerAppName) \
                         --resource-group $(resourceGroup) \
