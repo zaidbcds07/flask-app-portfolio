@@ -88,7 +88,7 @@ stages:
             displayName: 'Login to ACR'
             inputs:
               command: 'login'
-              containerRegistry: 'zlacr2026'
+              containerRegistry: 'zlacr2026-connection'
           
           # Push Docker image
           - task: Docker@2
@@ -120,7 +120,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: 'Azure Login'
                   inputs:
-                    azureSubscription: 'zlacr2026-connection'
+                    azureSubscription: 'zl-azure-connection'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
@@ -130,7 +130,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: 'Deploy Container App'
                   inputs:
-                    azureSubscription: 'zlacr2026-connection'
+                    azureSubscription: 'zl-azure-connection'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
