@@ -83,9 +83,10 @@ stages:
             inputs:
               command: 'build'
               Dockerfile: '**/dockerfile'
+              repository: '$(containerRegistry)/$(imageRepository)'
               tags: |
-                $(containerRegistry)/$(imageRepository):$(tag)
-                $(containerRegistry)/$(imageRepository):latest
+                $(tag)
+                latest
           
           # Login to Azure Container Registry
           - task: Docker@2
