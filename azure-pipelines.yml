@@ -174,7 +174,7 @@ stages:
                           --image $(containerRegistry)/$(imageRepository):$(tag) \
                           --target-port 5004 \
                           --ingress external \
-                          --environment-variables "SECRET_KEY=$(SECRET_KEY)" \
+                          --env-vars "SECRET_KEY=$(SECRET_KEY)" \
                           --registry-server $(containerRegistry) \
                           --registry-username "$(ACR_USERNAME)" \
                           --registry-password "$(ACR_PASSWORD)" \
