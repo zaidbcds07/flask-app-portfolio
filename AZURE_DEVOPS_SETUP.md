@@ -34,7 +34,7 @@ Run these Azure CLI commands:
 az login
 
 # Create resource group (if not exists)
-az group create --name flask-portfolio-rg --location eastus
+az group create --name flask-portfolio-rg --location southeastasia
 
 # Create Azure Container Registry
 az acr create --resource-group flask-portfolio-rg \
@@ -45,7 +45,7 @@ az acr create --resource-group flask-portfolio-rg \
 # Create Container Apps Environment
 az containerapp env create --name flask-portfolio-env \
   --resource-group flask-portfolio-rg \
-  --location eastus
+  --location southeastasia
 ```
 
 ### 2. Get ACR Credentials
