@@ -35,7 +35,7 @@ PROFILE = {
     "job_title": "Python, Linux & Cloud & DevOps Enthusiast",
     "linkedin": "https://www.linkedin.com/in/zaidlaz",
     "email": "lazimzaid@yahoo.com.sg",
-    "github": "https://github.com/zaidlaz",
+    "github": "https://zaidlaz.github.io/github.io/",
     "summary": (
         "I am building hands-on skills in Python, Linux administration, and DevOps. "
         "My work includes Flask applications, Bash automation, cron scheduling, "
