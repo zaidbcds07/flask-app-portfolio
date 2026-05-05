@@ -258,34 +258,35 @@ stages:
           
           # Update deployment image tag
           - script: |
-                    echo "Updating deployment image..."
-                    sed -i "s|image: zlacr2026.azurecr.io/flask-portfolio:.*|image: $(containerRegistry)/$(imageRepository):$(tag)|g" k8s/deployment.yaml
-                    cat k8s/deployment.yaml | grep "image:"
-                  displayName: 'Update Image Tag'
-                
-                # Apply Kubernetes manifests
-                - task: KubernetesManifest@1
-                  displayName: 'Deploy to AKS'
-                  inputs:
-                    action: 'deploy'
-                    connectionType: 'azureResourceManager'
-                    azureSubscriptionConnection: '$(azureServiceConnection)'
-                    azureResourceGroup: '$(aksResourceGroup)'
-                    kubernetesCluster: '$(aksClusterName)'
-                    namespace: 'flask-portfolio'
-                    manifests: |
-                      k8s/namespace.yaml
-                      k8s/secret.yaml
-                      k8s/deployment.yaml
-                      k8s/service.yaml
-                    containers: '$(containerRegistry)/$(imageRepository):$(tag)'
-                
-                # Verify deployment
-                - script: |
-                    echo "Waiting for deployment to stabilize..."
-                    sleep 30
-                    kubectl get pods -n flask-portfolio
-                    kubectl get svc -n flask-portfolio
-                    echo "Deployment complete!"
-                  displayName: 'Verify AKS Deployment'
+              echo "Updating deployment image..."
+              sed -i "s|image: zlacr2026.azurecr.io/flask-portfolio:.*|image: $(containerRegistry)/$(imageRepository):$(tag)|g" k8s/deployment.yaml
+              cat k8s/deployment.yaml | grep "image:"
+            displayName: 'Update Image Tag'
+          
+          # Apply Kubernetes manifests
+          - task: KubernetesManifest@1
+            displayName: 'Deploy to AKS'
+            inputs:
+              action: 'deploy'
+              connectionType: 'azureResourceManager'
+              azureSubscriptionConnection: '$(azureServiceConnection)'
+              azureResourceGroup: '$(aksResourceGroup)'
+              kubernetesCluster: '$(aksClusterName)'
+              namespace: 'flask-portfolio'
+              manifests: |
+                k8s/namespace.yaml
+                k8s/secret.yaml
+                k8s/deployment.yaml
+                k8s/service.yaml
+              containers: '$(containerRegistry)/$(imageRepository):$(tag)'
+          
+          # Verify deployment
+          - script: |
+              echo "Waiting for deployment to stabilize..."
+              sleep 30
+              kubectl get pods -n flask-portfolio
+              kubectl get svc -n flask-portfolio
+              echo "Deployment complete!"
+            displayName: 'Verify AKS Deployment'
+            continueOnError: true
                   continueOnError: true
