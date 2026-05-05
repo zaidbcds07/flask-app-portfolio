@@ -15,9 +15,7 @@ variables:
   # Container registry and image settings
   containerRegistry: 'zlacr2026.azurecr.io'
   imageRepository: 'flask-portfolio'
-
-    # Best practice: immutable image tag
-  tag: '$(Build.SourceVersion:~0,7)'  # Use first 7 chars of commit hash for unique tagging
+  tag: '$(Build.BuildId)'
   
   # Azure Container App settings
   resourceGroup: 'flask-portfolio-rg'
