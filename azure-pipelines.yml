@@ -22,6 +22,10 @@ variables:
   containerAppName: 'flask-portfolio-app'
   containerAppEnvironment: 'flask-portfolio-env'
   
+  # Azure Kubernetes Service (AKS) settings
+  aksResourceGroup: 'flask-portfolio-rg'
+  aksClusterName: 'flask-portfolio-aks'
+  
   # Service connection names - UPDATE THESE to match your Azure DevOps service connections
   acrServiceConnection: 'zlacr2026-connection'
   azureServiceConnection: 'zl-azure-connection'
@@ -196,4 +200,96 @@ stages:
                     sleep 30
                     curl -f -s $(appUrl) > /dev/null && echo "Deployment successful!" || echo "Deployment verification pending"
                   displayName: 'Verify Deployment'
+                  continueOnError: true
+
+  # Stage 4: Deploy to Azure Kubernetes Service (AKS)
+  - stage: DeployToAKS
+    displayName: 'Deploy to AKS'
+    dependsOn: BuildAndPush
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToKubernetes
+        displayName: 'Deploy to Kubernetes'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'aks-production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Login to Azure
+                - task: AzureCLI@2
+                  displayName: 'Azure Login'
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "Logged in to Azure"
+                
+                # Get AKS credentials
+                - task: AzureCLI@2
+                  displayName: 'Get AKS Credentials'
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "Getting AKS credentials..."
+                      az aks get-credentials \
+                        --resource-group $(aksResourceGroup) \
+                        --name $(aksClusterName) \
+                        --overwrite-existing
+                      echo "AKS credentials obtained"
+                
+                # Create ACR pull secret
+                - task: AzureCLI@2
+                  displayName: 'Create ACR Pull Secret'
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      echo "Creating ACR pull secret..."
+                      kubectl create namespace flask-portfolio --dry-run=client -o yaml | kubectl apply -f -
+                      kubectl create secret docker-registry acr-secret \
+                        --namespace flask-portfolio \
+                        --docker-server=$(containerRegistry) \
+                        --docker-username=$(ACR_USERNAME) \
+                        --docker-password=$(ACR_PASSWORD) \
+                        --dry-run=client -o yaml | kubectl apply -f -
+                      echo "ACR pull secret created"
+                
+                # Update deployment image tag
+                - script: |
+                    echo "Updating deployment image..."
+                    sed -i "s|image: zlacr2026.azurecr.io/flask-portfolio:.*|image: $(containerRegistry)/$(imageRepository):$(tag)|g" k8s/deployment.yaml
+                    cat k8s/deployment.yaml | grep "image:"
+                  displayName: 'Update Image Tag'
+                
+                # Apply Kubernetes manifests
+                - task: KubernetesManifest@1
+                  displayName: 'Deploy to AKS'
+                  inputs:
+                    action: 'deploy'
+                    connectionType: 'azureResourceManager'
+                    azureSubscriptionConnection: '$(azureServiceConnection)'
+                    azureResourceGroup: '$(aksResourceGroup)'
+                    kubernetesCluster: '$(aksClusterName)'
+                    namespace: 'flask-portfolio'
+                    manifests: |
+                      k8s/namespace.yaml
+                      k8s/secret.yaml
+                      k8s/deployment.yaml
+                      k8s/service.yaml
+                    containers: '$(containerRegistry)/$(imageRepository):$(tag)'
+                
+                # Verify deployment
+                - script: |
+                    echo "Waiting for deployment to stabilize..."
+                    sleep 30
+                    kubectl get pods -n flask-portfolio
+                    kubectl get svc -n flask-portfolio
+                    echo "Deployment complete!"
+                  displayName: 'Verify AKS Deployment'
                   continueOnError: true
