@@ -289,4 +289,3 @@ stages:
               echo "Deployment complete!"
             displayName: 'Verify AKS Deployment'
             continueOnError: true
-                  continueOnError: true
