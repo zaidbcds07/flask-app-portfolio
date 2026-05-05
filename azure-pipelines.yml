@@ -208,60 +208,56 @@ stages:
     dependsOn: BuildAndPush
     condition: succeeded()
     jobs:
-      - deployment: DeployToKubernetes
+      - job: DeployToKubernetes
         displayName: 'Deploy to Kubernetes'
         pool:
           vmImage: 'ubuntu-latest'
-        environment: 'aks-production'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                # Login to Azure
-                - task: AzureCLI@2
-                  displayName: 'Azure Login'
-                  inputs:
-                    azureSubscription: $(azureServiceConnection)
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      echo "Logged in to Azure"
-                
-                # Get AKS credentials
-                - task: AzureCLI@2
-                  displayName: 'Get AKS Credentials'
-                  inputs:
-                    azureSubscription: $(azureServiceConnection)
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      echo "Getting AKS credentials..."
-                      az aks get-credentials \
-                        --resource-group $(aksResourceGroup) \
-                        --name $(aksClusterName) \
-                        --overwrite-existing
-                      echo "AKS credentials obtained"
-                
-                # Create ACR pull secret
-                - task: AzureCLI@2
-                  displayName: 'Create ACR Pull Secret'
-                  inputs:
-                    azureSubscription: $(azureServiceConnection)
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      echo "Creating ACR pull secret..."
-                      kubectl create namespace flask-portfolio --dry-run=client -o yaml | kubectl apply -f -
-                      kubectl create secret docker-registry acr-secret \
-                        --namespace flask-portfolio \
-                        --docker-server=$(containerRegistry) \
-                        --docker-username=$(ACR_USERNAME) \
-                        --docker-password=$(ACR_PASSWORD) \
-                        --dry-run=client -o yaml | kubectl apply -f -
-                      echo "ACR pull secret created"
-                
-                # Update deployment image tag
-                - script: |
+        steps:
+          # Login to Azure
+          - task: AzureCLI@2
+            displayName: 'Azure Login'
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "Logged in to Azure"
+          
+          # Get AKS credentials
+          - task: AzureCLI@2
+            displayName: 'Get AKS Credentials'
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "Getting AKS credentials..."
+                az aks get-credentials \
+                  --resource-group $(aksResourceGroup) \
+                  --name $(aksClusterName) \
+                  --overwrite-existing
+                echo "AKS credentials obtained"
+          
+          # Create ACR pull secret
+          - task: AzureCLI@2
+            displayName: 'Create ACR Pull Secret'
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "Creating ACR pull secret..."
+                kubectl create namespace flask-portfolio --dry-run=client -o yaml | kubectl apply -f -
+                kubectl create secret docker-registry acr-secret \
+                  --namespace flask-portfolio \
+                  --docker-server=$(containerRegistry) \
+                  --docker-username=$(ACR_USERNAME) \
+                  --docker-password=$(ACR_PASSWORD) \
+                  --dry-run=client -o yaml | kubectl apply -f -
+                echo "ACR pull secret created"
+          
+          # Update deployment image tag
+          - script: |
                     echo "Updating deployment image..."
                     sed -i "s|image: zlacr2026.azurecr.io/flask-portfolio:.*|image: $(containerRegistry)/$(imageRepository):$(tag)|g" k8s/deployment.yaml
                     cat k8s/deployment.yaml | grep "image:"
