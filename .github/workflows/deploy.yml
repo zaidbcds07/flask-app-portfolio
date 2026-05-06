@@ -90,6 +90,7 @@ jobs:
       uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+        subscriptionId: ce9656f2-9327-40c5-b220-6c45feacfd66
     
     - name: Deploy to Azure Container Apps
       uses: azure/container-apps-deploy-action@v2
@@ -115,6 +116,7 @@ jobs:
       uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+        subscriptionId: ce9656f2-9327-40c5-b220-6c45feacfd66
     
     - name: Deploy Bicep template
       uses: azure/arm-deploy@v2
