@@ -6,9 +6,9 @@ echo "=== Flask Portfolio App - Azure Setup ==="
 echo ""
 
 # Configuration - UPDATE THESE VALUES
-RESOURCE_GROUP="flask-portfolio-rg"
+RESOURCE_GROUP="zl-resource-group"  # CHANGE THIS
 LOCATION="southeastasia"
-ACR_NAME="yournameacr2026"  # CHANGE THIS - must be globally unique
+ACR_NAME="zaidbacr"  # CHANGE THIS - must be globally unique
 CONTAINER_APP_NAME="flask-portfolio-app"
 ENVIRONMENT_NAME="flask-portfolio-env"
 
