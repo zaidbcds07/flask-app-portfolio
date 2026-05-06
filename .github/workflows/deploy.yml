@@ -71,8 +71,8 @@ jobs:
         context: .
         push: true
         tags: |
-          ${{ secrets.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          ${{ secrets.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          zaidbacr.azurecr.io/flask-portfolio:${{ github.sha }}
+          zaidbacr.azurecr.io/flask-portfolio:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -96,9 +96,9 @@ jobs:
       with:
         appSourcePath: ${{ github.workspace }}
         acrName: zaidbacr
-        containerAppName: ${{ env.CONTAINER_APP_NAME }}
-        resourceGroup: ${{ env.RESOURCE_GROUP }}
-        imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        containerAppName: flask-portfolio-app
+        resourceGroup: zl-resource-group
+        imageToDeploy: zaidbacr.azurecr.io/flask-portfolio:${{ github.sha }}
         targetPort: 5004
 
   deploy-infra:
