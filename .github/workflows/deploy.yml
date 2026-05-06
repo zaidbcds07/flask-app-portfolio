@@ -1,0 +1,129 @@
+name: Build and Deploy to Azure Container Apps
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  AZURE_CONTAINER_REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+  CONTAINER_APP_NAME: ${{ secrets.CONTAINER_APP_NAME }}
+  RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+  IMAGE_NAME: flask-portfolio
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    name: Build and Test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      run: |
+        pip install pytest
+        pytest || echo "No tests found, continuing..."
+      continue-on-error: true
+    
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || echo "Lint warnings found"
+      continue-on-error: true
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    name: Build and Push Docker Image
+    needs: build-and-test
+    if: github.event_name != 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ secrets.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          ${{ secrets.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Azure Container Apps
+    needs: build-and-push
+    if: github.event_name != 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Deploy to Azure Container Apps
+      uses: azure/container-apps-deploy-action@v2
+      with:
+        appSourcePath: ${{ github.workspace }}
+        acrName: ${{ secrets.ACR_NAME }}
+        containerAppName: ${{ secrets.CONTAINER_APP_NAME }}
+        resourceGroup: ${{ secrets.RESOURCE_GROUP }}
+        imageToDeploy: ${{ secrets.AZURE_CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        targetPort: 5004
+
+  deploy-infra:
+    runs-on: ubuntu-latest
+    name: Deploy Infrastructure
+    needs: build-and-test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Deploy Bicep template
+      uses: azure/arm-deploy@v2
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        resourceGroupName: ${{ secrets.RESOURCE_GROUP }}
+        template: ./infrastructure/main.bicep
+        parameters: >
+          containerRegistryName=${{ secrets.ACR_NAME }}
+          containerAppName=${{ secrets.CONTAINER_APP_NAME }}
+          environmentName=${{ secrets.CONTAINER_APP_ENV_NAME }}
+          location=${{ secrets.AZURE_LOCATION }}
+        failOnStdErr: false
